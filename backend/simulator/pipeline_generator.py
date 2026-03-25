@@ -100,3 +100,48 @@ def _task_status(run_status: str, task_index: int, total_tasks: int) -> str:
     if task_index == failure_point:
         return "failed"
     return "skipped"
+
+def _insert_run(
+    cur,
+    pipeline_name: str,
+    status: str,
+    start_time: datetime,
+) -> int:
+    """Insert a pipeline_runs record and return its generated id."""
+    duration = random.randint(*PIPELINE_DURATION_RANGES[pipeline_name])
+
+    if status == "running":
+        end_time = None
+        rows_processed = None
+        error_message = None
+    elif status == "success":
+        end_time = start_time + timedelta(seconds=duration)
+        rows_processed = random.randint(*PIPELINE_ROW_RANGES[pipeline_name])
+        error_message = None
+    else:  # failed
+        # Fails somewhere between 20%–80% of expected duration
+        failure_offset = int(duration * random.uniform(0.2, 0.8))
+        end_time = start_time + timedelta(seconds=failure_offset)
+        rows_processed = random.randint(
+            0, PIPELINE_ROW_RANGES[pipeline_name][0] // 2
+        )
+        error_message = random.choice(FAILURE_MESSAGES)
+
+    cur.execute(
+        """
+        INSERT INTO pipeline_runs
+               (pipeline_name, status, start_time, end_time, rows_processed, error_message)
+        VALUES (%(pipeline_name)s, %(status)s, %(start_time)s,
+                %(end_time)s, %(rows_processed)s, %(error_message)s)
+        RETURNING id
+        """,
+        {
+            "pipeline_name": pipeline_name,
+            "status": status,
+            "start_time": start_time,
+            "end_time": end_time,
+            "rows_processed": rows_processed,
+            "error_message": error_message,
+        },
+    )
+    return cur.fetchone()["id"]
