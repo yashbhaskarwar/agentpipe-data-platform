@@ -145,3 +145,78 @@ def _insert_run(
         },
     )
     return cur.fetchone()["id"]
+
+def _insert_tasks(cur, run_id: int, pipeline_name: str, run_status: str) -> None:
+    """Insert pipeline_tasks rows for a given run."""
+    task_names = TASKS[pipeline_name]
+    total = len(task_names)
+
+    for idx, task_name in enumerate(task_names):
+        status = _task_status(run_status, idx, total)
+        duration: Optional[float] = None
+        error_message: Optional[str] = None
+
+        if status == "success":
+            duration = round(random.uniform(5.0, 120.0), 2)
+        elif status == "failed":
+            duration = round(random.uniform(1.0, 60.0), 2)
+            error_message = random.choice(FAILURE_MESSAGES)
+
+        cur.execute(
+            """
+            INSERT INTO pipeline_tasks
+                   (run_id, task_name, status, duration_seconds, error_message)
+            VALUES (%(run_id)s, %(task_name)s, %(status)s,
+                    %(duration_seconds)s, %(error_message)s)
+            """,
+            {
+                "run_id": run_id,
+                "task_name": task_name,
+                "status": status,
+                "duration_seconds": duration,
+                "error_message": error_message,
+            },
+        )
+
+def _insert_quality_checks(
+    cur, run_id: int, pipeline_name: str, run_status: str, start_time: datetime
+) -> None:
+    """Insert data_quality_checks rows for a given run."""
+    check_names = QUALITY_CHECKS[pipeline_name]
+
+    # Failed runs have at least 1 failing quality check (the one that caused the issue)
+    force_fail_index = random.randint(0, len(check_names) - 1) if run_status == "failed" else -1
+
+    for idx, check_name in enumerate(check_names):
+        if run_status == "running":
+            if idx > 0:
+                continue
+            passed = True
+            details = "Check in progress"
+        elif run_status == "failed" and idx == force_fail_index:
+            passed = False
+            details = random.choice(FAILURE_MESSAGES)
+        else:
+            # Occasional flakiness even on successful runs
+            passed = random.random() > 0.03
+            details = "All assertions passed." if passed else random.choice(FAILURE_MESSAGES)
+
+        # Checks happen near the end of the run
+        offset_seconds = random.randint(30, 300)
+        checked_at = start_time + timedelta(seconds=offset_seconds)
+
+        cur.execute(
+            """
+            INSERT INTO data_quality_checks
+                   (run_id, check_name, passed, details, checked_at)
+            VALUES (%(run_id)s, %(check_name)s, %(passed)s, %(details)s, %(checked_at)s)
+            """,
+            {
+                "run_id": run_id,
+                "check_name": check_name,
+                "passed": passed,
+                "details": details,
+                "checked_at": checked_at,
+            },
+        )
+        
