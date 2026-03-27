@@ -219,4 +219,48 @@ def _insert_quality_checks(
                 "checked_at": checked_at,
             },
         )
-        
+
+def simulate(days_back: int = DAYS_BACK) -> None:
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+    base_date = now_utc - timedelta(days=days_back)
+
+    print(f"Applying schema...")
+    apply_schema()
+
+    with get_cursor() as cur:
+        # Wipe existing data
+        print("Truncating existing data...")
+        cur.execute("TRUNCATE data_quality_checks, pipeline_tasks, pipeline_runs RESTART IDENTITY CASCADE")
+
+        total_runs = 0
+
+        for pipeline_name in PIPELINES:
+            print(f"  Generating data for pipeline: {pipeline_name}")
+
+            run_schedule: list[tuple[datetime, bool]] = []
+
+            for day_offset in range(days_back):
+                day = base_date + timedelta(days=day_offset)
+                n_runs = random.choices([1, 2], weights=[80, 20])[0]
+                for _ in range(n_runs):
+                    run_schedule.append((_random_start(day), False))
+
+            # Sort chronologically
+            run_schedule.sort(key=lambda x: x[0])
+            if run_schedule:
+                run_schedule[-1] = (run_schedule[-1][0], True)
+
+            for start_time, is_latest in run_schedule:
+                weights = LATEST_WEIGHTS if is_latest else HISTORICAL_WEIGHTS
+                status = random.choice(weights)
+
+                run_id = _insert_run(cur, pipeline_name, status, start_time)
+                _insert_tasks(cur, run_id, pipeline_name, status)
+                _insert_quality_checks(cur, run_id, pipeline_name, status, start_time)
+                total_runs += 1
+
+    print(f"\nSimulation complete. {total_runs} pipeline runs inserted across {len(PIPELINES)} pipelines.")
+
+if __name__ == "__main__":
+    simulate()
+    
