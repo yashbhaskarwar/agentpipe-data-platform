@@ -24,13 +24,13 @@ def get_connection() -> psycopg2.extensions.connection:
 def get_cursor() -> Generator[psycopg2.extras.RealDictCursor, None, None]:
     conn = get_connection()
     try:
-        with conn:                  # auto-commit / rollback
+        with conn:                 
             with conn.cursor() as cur:
                 yield cur
     finally:
         conn.close()
 
-def apply_schema(schema_path: str = "db/schema.sql") -> None:
+def apply_schema(schema_path: str = "database/schema.sql") -> None:
     with open(schema_path, "r") as fh:
         sql = fh.read()
 
