@@ -8,3 +8,9 @@ AgentPipe is a conversational data pipeline agent that lets users query, monitor
 - Set up PostgreSQL development environment
 - Build initial database connection utilities
 - Prepare project for future LLM-based pipeline control features
+
+## Project Structure
+
+backend/
+database/
+docker-compose.yaml
