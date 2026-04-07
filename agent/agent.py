@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 from typing import Any
@@ -8,6 +9,7 @@ from dotenv import load_dotenv
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agent.tool_definitions import TOOL_DEFINITIONS
+from agent.tools import TOOL_DISPATCH
 
 load_dotenv()
 
@@ -18,8 +20,34 @@ SYSTEM_PROMPT = """You are AgentPipe, an AI assistant that helps data engineers 
 You have access to tools that let you query a live PostgreSQL database tracking pipeline execution history.
 
 Guidelines:
-- Always use the available tools to get real data before answering questions about pipeline status, failures or quality issues.
-"""
+- Always use the available tools to get real data before answering questions about pipeline status, failures, or quality issues.
+- When the user mentions "last night", interpret it as yesterday's date and pass it to the date parameter.
+- When the user mentions "this week", use days=7. "Today" means the current date.
+- If a tool returns no results, say so clearly and suggest alternatives (e.g., check a wider time window).
+- For trigger requests, confirm the action was taken and provide the run ID.
+- Be concise. Data engineers want facts, not prose.
+- If a tool returns an error field, report it transparently to the user."""
+
+
+def _execute_tool(tool_name: str, tool_input: dict[str, Any]) -> str:
+    fn = TOOL_DISPATCH.get(tool_name)
+
+    if fn is None:
+        result = {"error": f"Unknown tool '{tool_name}'."}
+    else:
+        result = fn(**tool_input)
+
+    return json.dumps(result, default=str)
+
+
+def _process_tool_use_block(block: anthropic.types.ToolUseBlock) -> dict[str, Any]:
+    tool_result_content = _execute_tool(block.name, block.input)
+
+    return {
+        "type": "tool_result",
+        "tool_use_id": block.id,
+        "content": tool_result_content,
+    }
 
 
 def run_agent(
@@ -41,6 +69,28 @@ def run_agent(
 
     assistant_content = [block.model_dump() for block in response.content]
     history.append({"role": "assistant", "content": assistant_content})
+
+    if response.stop_reason == "tool_use":
+        tool_use_blocks = [
+            block for block in response.content if block.type == "tool_use"
+        ]
+
+        tool_results = [
+            _process_tool_use_block(block) for block in tool_use_blocks
+        ]
+
+        history.append({"role": "user", "content": tool_results})
+
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=4096,
+            system=SYSTEM_PROMPT,
+            tools=TOOL_DEFINITIONS,
+            messages=history,
+        )
+
+        assistant_content = [block.model_dump() for block in response.content]
+        history.append({"role": "assistant", "content": assistant_content})
 
     text_blocks = [
         block.text
