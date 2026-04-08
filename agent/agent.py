@@ -14,6 +14,7 @@ from agent.tools import TOOL_DISPATCH
 load_dotenv()
 
 MODEL = "claude-sonnet-4-20250514"
+MAX_TOOL_ROUNDS = 10  
 
 SYSTEM_PROMPT = """You are AgentPipe, an AI assistant that helps data engineers monitor and manage data pipelines.
 
@@ -31,7 +32,6 @@ Guidelines:
 
 def _execute_tool(tool_name: str, tool_input: dict[str, Any]) -> str:
     fn = TOOL_DISPATCH.get(tool_name)
-
     if fn is None:
         result = {"error": f"Unknown tool '{tool_name}'."}
     else:
@@ -39,16 +39,13 @@ def _execute_tool(tool_name: str, tool_input: dict[str, Any]) -> str:
 
     return json.dumps(result, default=str)
 
-
 def _process_tool_use_block(block: anthropic.types.ToolUseBlock) -> dict[str, Any]:
     tool_result_content = _execute_tool(block.name, block.input)
-
     return {
         "type": "tool_result",
         "tool_use_id": block.id,
         "content": tool_result_content,
     }
-
 
 def run_agent(
     user_message: str,
@@ -59,28 +56,7 @@ def run_agent(
     history: list[dict[str, Any]] = list(conversation_history or [])
     history.append({"role": "user", "content": user_message})
 
-    response = client.messages.create(
-        model=MODEL,
-        max_tokens=4096,
-        system=SYSTEM_PROMPT,
-        tools=TOOL_DEFINITIONS,
-        messages=history,
-    )
-
-    assistant_content = [block.model_dump() for block in response.content]
-    history.append({"role": "assistant", "content": assistant_content})
-
-    if response.stop_reason == "tool_use":
-        tool_use_blocks = [
-            block for block in response.content if block.type == "tool_use"
-        ]
-
-        tool_results = [
-            _process_tool_use_block(block) for block in tool_use_blocks
-        ]
-
-        history.append({"role": "user", "content": tool_results})
-
+    for round_num in range(MAX_TOOL_ROUNDS):
         response = client.messages.create(
             model=MODEL,
             max_tokens=4096,
@@ -89,14 +65,40 @@ def run_agent(
             messages=history,
         )
 
+        # Append assistant's response to history 
         assistant_content = [block.model_dump() for block in response.content]
         history.append({"role": "assistant", "content": assistant_content})
 
-    text_blocks = [
-        block.text
-        for block in response.content
-        if hasattr(block, "text")
-    ]
+        if response.stop_reason == "end_turn":
+            # Extract the text from the final response
+            text_blocks = [
+                block.text
+                for block in response.content
+                if hasattr(block, "text")
+            ]
+            final_text = "\n".join(text_blocks).strip()
+            return final_text, history
 
-    final_text = "\n".join(text_blocks).strip()
-    return final_text, history
+        if response.stop_reason == "tool_use":
+            # Execute all tool calls in this turn
+            tool_use_blocks = [
+                block for block in response.content if block.type == "tool_use"
+            ]
+
+            tool_results = [
+                _process_tool_use_block(block) for block in tool_use_blocks
+            ]
+
+            history.append({"role": "user", "content": tool_results})
+            continue
+
+        return (
+            f"Agent stopped unexpectedly with reason: {response.stop_reason}",
+            history,
+        )
+
+    return (
+        "Agent reached the maximum number of tool-calling rounds without a final answer. "
+        "Please try rephrasing your question.",
+        history,
+    )
