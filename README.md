@@ -9,12 +9,6 @@ AgentPipe is a conversational data pipeline agent that lets users query, monitor
 - Build initial database connection utilities
 - Prepare project for future LLM-based pipeline control features
 
-## Project Structure
-
-backend/
-database/
-docker-compose.yaml
-
 ## Phase 2: Conversational Agent
 
 - Database query tools
@@ -23,3 +17,27 @@ docker-compose.yaml
 - Tool dispatch framework
 - Interactive CLI interface
 - Conversation history management
+
+## Project Structure
+
+agentpipe/ 
+│ 
+├── agent/ 
+│   ├── agent.py 
+│   ├── tool_definitions.py 
+│   └── tools.py 
+│ 
+├── backend/ 
+│   ├── db/ 
+│        └─── db.py
+│   └── simulator/ 
+│        └─── pipeline_generator.py  
+│ 
+├── database/ 
+│   └── schema.sql 
+│
+├── cli.py 
+├── docker-compose.yml 
+├── requirements.txt 
+├── README.md 
+└── .env
