@@ -19,7 +19,7 @@ AgentPipe is a conversational data pipeline agent that lets users query, monitor
 - Conversation history management
 
 ## Project Structure
-
+```text
 agentpipe/ 
 │ 
 ├── agent/ 
@@ -41,3 +41,4 @@ agentpipe/
 ├── requirements.txt 
 ├── README.md 
 └── .env
+```
