@@ -35,4 +35,45 @@ class ChatRequest(BaseModel):
 class ChatData(BaseModel):
     response: str
     session_id: str
-    
+
+# Pipeline runs 
+class PipelineRunRecord(BaseModel):
+    id: int
+    pipeline_name: str
+    status: str
+    start_time: str | None
+    end_time: str | None
+    rows_processed: int | None
+    error_message: str | None
+
+class PipelinesData(BaseModel):
+    pipelines: list[PipelineRunRecord]
+    total: int
+
+class RunsData(BaseModel):
+    runs: list[PipelineRunRecord]
+    total: int
+    days: int
+
+# Quality checks 
+class QualityIssueRecord(BaseModel):
+    id: int
+    run_id: int
+    pipeline_name: str
+    check_name: str
+    passed: bool
+    details: str | None
+    checked_at: str | None
+
+class QualityData(BaseModel):
+    issues: list[QualityIssueRecord]
+    total: int
+    days: int
+
+# Trigger
+class TriggerData(BaseModel):
+    run_id: int
+    pipeline_name: str
+    status: str
+    start_time: str
+    message: str
