@@ -99,3 +99,18 @@ async def fetch_quality_issues(days: int) -> list[dict[str, Any]]:
             cutoff,
         )
     return [_row_to_dict(r) for r in rows]
+
+async def insert_pipeline_run(pipeline_name: str) -> dict[str, Any]:
+    start_time = _utc_now()
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            """
+            INSERT INTO pipeline_runs (pipeline_name, status, start_time)
+            VALUES ($1, 'running', $2)
+            RETURNING id, pipeline_name, status, start_time
+            """,
+            pipeline_name,
+            start_time,
+        )
+    return _row_to_dict(row)
