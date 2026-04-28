@@ -18,6 +18,18 @@ AgentPipe is a conversational data pipeline agent that lets users query, monitor
 - Interactive CLI interface
 - Conversation history management
 
+## Phase 3: REST API & Platform Services
+
+- FastAPI application layer
+- Async PostgreSQL database access
+- Pipeline monitoring endpoints
+- Data quality monitoring endpoints
+- Pipeline trigger API
+- Conversational agent API endpoint
+- Structured request logging
+- Request rate limiting
+- Standardized API response models
+
 ## Project Structure
 ```text
 agentpipe/ 
@@ -29,10 +41,17 @@ agentpipe/
 │ 
 ├── backend/ 
 │   ├── db/ 
-│        └─── db.py
+│        ├─── db.py
+│        └─── async_db.py
 │   └── simulator/ 
 │        └─── pipeline_generator.py  
 │ 
+├── api/
+│ ├── app.py
+│ ├── main.py
+│ ├── logger.py
+│ └── models.py
+│
 ├── database/ 
 │   └── schema.sql 
 │
