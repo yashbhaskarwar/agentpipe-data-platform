@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import sys
@@ -45,7 +46,10 @@ async def handle_call_tool(
     if fn is None:
         result = {"error": f"Unknown tool '{name}'."}
     else:
-        result = fn(**arguments)
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: fn(**arguments),
+        )
 
     return [
         TextContent(
