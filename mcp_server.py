@@ -42,13 +42,11 @@ async def handle_call_tool(
     arguments: dict[str, Any],
 ) -> list[TextContent]:
     fn = TOOL_DISPATCH.get(name)
-
     if fn is None:
-        result = {"error": f"Unknown tool '{name}'."}
+        result: dict[str, Any] = {"error": f"Unknown tool '{name}'."}
     else:
         result = await asyncio.get_event_loop().run_in_executor(
-            None,
-            lambda: fn(**arguments),
+            None, lambda: fn(**arguments)
         )
 
     return [
@@ -66,7 +64,6 @@ async def main() -> None:
             tools=ToolsCapability(listChanged=False),
         ),
     )
-
     async with stdio_server() as (read_stream, write_stream):
         await server.run(
             read_stream=read_stream,
