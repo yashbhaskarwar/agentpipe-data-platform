@@ -30,6 +30,15 @@ AgentPipe is a conversational data pipeline agent that lets users query, monitor
 - Request rate limiting
 - Standardized API response models
 
+## Phase 4: MCP Integration & Deployment
+
+- Model Context Protocol (MCP) server
+- Dockerized application deployment
+- Multi-service Docker Compose stack
+- Automatic database seeding
+- Unit, integration, and end-to-end testing
+- Deployment and developer documentation
+
 ## Project Structure
 ```text
 agentpipe/ 
@@ -55,8 +64,15 @@ agentpipe/
 ├── database/ 
 │   └── schema.sql 
 │
-├── cli.py 
+├── tests/  
+│   ├── test_tools_unit.py 
+│   ├── test_api_integration.py 
+│   └── test_e2e.py
+│
+├── Dockerfile
+├── docker-compose.yml
 ├── docker-compose.yml 
+├── cli.py
 ├── requirements.txt 
 ├── README.md 
 └── .env
