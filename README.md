@@ -2,42 +2,47 @@
 
 AgentPipe is a conversational data pipeline agent that lets users query, monitor and trigger data pipeline workflows using natural language.
 
-## Phase 1 
+## Overview
+AgentPipe is an AI-powered data pipeline assistant that enables users to monitor, query and trigger data pipelines using natural language. It combines an LLM-powered conversational agent with REST APIs and the Model Context Protocol (MCP), allowing the same pipeline tools to be accessed from a command-line interface, FastAPI service or MCP-compatible clients.
 
-- Define pipeline tracking schema
-- Set up PostgreSQL development environment
-- Build initial database connection utilities
-- Prepare project for future LLM-based pipeline control features
+The project demonstrates conversational AI, data engineering workflows, API development, containerization and automated testing within a production-inspired architecture.
 
-## Phase 2: Conversational Agent
+## Key Features
 
-- Database query tools
-- Claude tool definitions
-- Multi-turn tool calling workflow
-- Tool dispatch framework
-- Interactive CLI interface
-- Conversation history management
+### Conversational Pipeline Operations
 
-## Phase 3: REST API & Platform Services
+- Query pipeline status using natural language
+- Investigate failed runs
+- Retrieve data quality reports
+- Trigger pipeline executions
+- Multi-turn conversations with session management
 
-- FastAPI application layer
-- Async PostgreSQL database access
-- Pipeline monitoring endpoints
-- Data quality monitoring endpoints
-- Pipeline trigger API
-- Conversational agent API endpoint
-- Structured request logging
-- Request rate limiting
-- Standardized API response models
+### REST API
 
-## Phase 4: MCP Integration & Deployment
+- Six production-style endpoints
+- Async PostgreSQL access
+- Structured JSON logging
+- Request validation with Pydantic
+- Rate limiting
 
-- Model Context Protocol (MCP) server
-- Dockerized application deployment
-- Multi-service Docker Compose stack
-- Automatic database seeding
-- Unit, integration, and end-to-end testing
-- Deployment and developer documentation
+### MCP Integration
+
+- Exposes the same pipeline tools through MCP
+- Compatible with Claude Code
+- Reuses the same business logic as the CLI and REST API
+
+### Containerized Deployment
+
+- Docker Compose stack
+- Automatic schema initialization
+- Automatic sample data generation
+- Shared PostgreSQL instance
+
+### Testing
+
+- Unit tests
+- Integration tests
+- End-to-end workflow tests
 
 ## Project Structure
 ```text
