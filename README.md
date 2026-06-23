@@ -44,6 +44,53 @@ The project demonstrates conversational AI, data engineering workflows, API deve
 - Integration tests
 - End-to-end workflow tests
 
+## System Architechture
+```text
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         User Interfaces                         │
+│                                                                 │
+│   CLI (cli.py)          REST API (:8000)    MCP Clients        │
+│   python cli.py         FastAPI/uvicorn     Claude Code/Cursor  │
+└────────┬────────────────────────┬──────────────────┬───────────┘
+         │                        │                  │
+         v                        v                  v
+┌────────────────┐    ┌───────────────────┐  ┌──────────────────┐
+│  agent/        │    │  api/             │  │  mcp_server.py   │
+│  agent.py      │<───│  app.py           │  │                  │
+│                │    │                   │  │  Exposes same 5  │
+│  Claude API    │    │  6 endpoints      │  │  tools over      │
+│  tool-calling  │    │  Rate limiting    │  │  stdio/MCP       │
+│  loop          │    │  JSON logging     │  │  protocol        │
+└────────┬───────┘    └────────┬──────────┘  └───────┬──────────┘
+         │                     │                      │
+         v                     v                      v
+┌─────────────────────────────────────────────────────────────────┐
+│                       agent/tools.py                            │
+│   get_pipeline_status  │  get_failed_runs  │  get_run_summary  │
+│   get_data_quality_issues  │  trigger_pipeline_run             │
+└──────────────────────────────┬──────────────────────────────────┘
+                               │
+              ┌────────────────┴────────────────┐
+              │                                 │
+              v                                 v
+   ┌──────────────────┐              ┌──────────────────────┐
+   │ backend/db/db.py │              │backend/db/async_db.py│
+   │  psycopg2 (sync) │              │  asyncpg (async)     │
+   │  CLI + tools     │              │  FastAPI layer only  │
+   └────────┬─────────┘              └──────────┬───────────┘
+            │                                   │
+            └──────────────┬────────────────────┘
+                           v
+              ┌────────────────────────┐
+              │     PostgreSQL         │
+              │                        │
+              │  pipeline_runs         │
+              │  pipeline_tasks        │
+              │  data_quality_checks   │
+              └────────────────────────┘
+```
+
 ## Project Structure
 ```text
 agentpipe/ 
@@ -82,3 +129,15 @@ agentpipe/
 ├── README.md 
 └── .env
 ```
+
+## Technology Stack
+
+AI | Claude API 
+API | FastAPI 
+Database | PostgreSQL 
+Async DB | asyncpg 
+Sync DB | psycopg2 
+MCP | Python MCP SDK 
+Containerization | Docker 
+Testing | pytest 
+Configuration | python-dotenv 
