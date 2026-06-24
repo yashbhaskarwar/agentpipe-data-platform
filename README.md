@@ -130,6 +130,28 @@ agentpipe/
 └── .env
 ```
 
+## How to Run
+
+1. Configure environment variables
+Update .env with:
+Anthropic API key
+PostgreSQL credentials
+
+2. Start the application
+docker compose up -d
+
+Thiswill start:
+PostgreSQL
+FastAPI service
+MCP server
+
+The database schema is initialized automatically and sample pipeline data is seeded during the first startup.
+
+3. Verify the deployment
+curl http://localhost:8000/health
+Interactive API documentation is available at:
+http://localhost:8000/docs
+
 ## Technology Stack
 
 AI | Claude API 
@@ -141,3 +163,15 @@ MCP | Python MCP SDK
 Containerization | Docker 
 Testing | pytest 
 Configuration | python-dotenv 
+
+## Design Highlights
+
+- Separate synchronous and asynchronous database layers
+- Thread pool execution for blocking LLM operations
+- Stateless REST API with session-based conversations
+- Containerized deployment with automatic database seeding
+
+## Notes
+- The same tool layer is shared across the CLI, REST API and MCP server, avoiding duplicate business logic.
+- FastAPI uses asynchronous database access (asyncpg), while the conversational agent uses synchronous PostgreSQL access (psycopg2) to match the Claude tool-calling workflow.
+- This project is intended as a production-inspired portfolio demonstrating conversational AI, data engineering, API design, containerization and software testing.
