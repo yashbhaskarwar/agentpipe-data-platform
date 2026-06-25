@@ -46,7 +46,6 @@ The project demonstrates conversational AI, data engineering workflows, API deve
 
 ## System Architechture
 ```text
-```
 ┌─────────────────────────────────────────────────────────────────┐
 │                         User Interfaces                         │
 │                                                                 │
