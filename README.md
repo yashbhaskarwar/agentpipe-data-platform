@@ -49,9 +49,9 @@ The project demonstrates conversational AI, data engineering workflows, API deve
 ┌─────────────────────────────────────────────────────────────────┐
 │                         User Interfaces                         │
 │                                                                 │
-│   CLI (cli.py)          REST API (:8000)    MCP Clients        │
+│   CLI (cli.py)          REST API (:8000)    MCP Clients         │
 │   python cli.py         FastAPI/uvicorn     Claude Code/Cursor  │
-└────────┬────────────────────────┬──────────────────┬───────────┘
+└────────┬────────────────────────┬──────────────────┬────────────┘
          │                        │                  │
          v                        v                  v
 ┌────────────────┐    ┌───────────────────┐  ┌──────────────────┐
@@ -66,8 +66,8 @@ The project demonstrates conversational AI, data engineering workflows, API deve
          v                     v                      v
 ┌─────────────────────────────────────────────────────────────────┐
 │                       agent/tools.py                            │
-│   get_pipeline_status  │  get_failed_runs  │  get_run_summary  │
-│   get_data_quality_issues  │  trigger_pipeline_run             │
+│   get_pipeline_status  │  get_failed_runs  │  get_run_summary   │
+│   get_data_quality_issues  │  trigger_pipeline_run              │
 └──────────────────────────────┬──────────────────────────────────┘
                                │
               ┌────────────────┴────────────────┐
